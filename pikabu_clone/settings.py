@@ -37,6 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'corsheaders',
+
+    'pikabu_clone.apps.authentication.apps.AuthenticationConfig',
+    'pikabu_clone.apps.posts.apps.PostsConfig',
+    'pikabu_clone.apps.core',
 ]
 
 MIDDLEWARE = [
@@ -118,3 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# CORS for Test in UI
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000',
+)
