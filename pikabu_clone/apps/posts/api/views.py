@@ -25,5 +25,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CommentDetailView(generics.ListAPIView):
-    queryset = Comment.objects.all()
     serializer_class = CommentDetailsSerializer
+
+    def get_queryset(self):
+        return Comment.objects.find_parent_comments()

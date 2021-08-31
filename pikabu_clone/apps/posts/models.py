@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 User = get_user_model()
 
@@ -19,6 +21,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
+    comments = GenericRelation('comment')
 
     def __str__(self):
         return self.title
@@ -26,10 +29,6 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'post'
         verbose_name_plural = 'Posts'
-
-    def comments(self):
-        """ Get all comments to these post """
-        return Comment.objects.filter(post=self)
 
 
 class CommentManager(models.Manager):
@@ -42,6 +41,16 @@ class CommentManager(models.Manager):
     def find_by_post(self, post):
         """ Retrieve comments by post """
         return self.get_queryset().filter(post=post)
+
+    def find_by_post_with_nested_comments(self, post):
+        """
+        Retrieve comments by post
+        If the comment is nested, then it will be displayed at the nested level
+        """
+        return self.find_by_post(post).filter(post=post, parent_comment=None)
+
+    def find_parent_comments(self):
+        return self.get_queryset().filter(parent_comment=None)
 
     def find_by_parent_comment(self, parent_comment):
         """ Get children of comment """
@@ -60,18 +69,20 @@ class Comment(models.Model):
     )
     post = models.ForeignKey(
         Post,
-        related_name='comments',
         db_index=True,
         on_delete=models.CASCADE,
         verbose_name='which post the comment belongs to'
     )
     parent_comment = models.ForeignKey(
         'self',
+        related_name='comment_children',
         on_delete=models.CASCADE,
         blank=True,
         null=True,
         verbose_name='parent comment, to achieve tree comments behavior'
     )
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
 
     objects = CommentManager()
 

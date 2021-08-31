@@ -14,7 +14,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
 class PostListSerializer(serializers.ModelSerializer):
     """ Serializer for GET requests """
-    author = serializers.CharField()
+    author = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
 
     class Meta:
@@ -22,31 +22,32 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'body', 'author', 'comments')
 
     @staticmethod
+    def get_author(obj):
+        """ Get author username """
+        return str(obj.author.username)
+
+    @staticmethod
     def get_comments(obj):
         """ List of replies to these comment """
-        return CommentDetailsSerializer(Comment.objects.find_by_post(obj), many=True).data
-
-
-class CommentChildSerializer(serializers.ModelSerializer):
-    """ Serializer to display parent comments """
-    class Meta:
-        model = Comment
-        fields = ['body', 'author']
+        return CommentDetailsSerializer(
+            Comment.objects.find_by_post_with_nested_comments(obj),
+            many=True
+        ).data
 
 
 class CommentDetailsSerializer(serializers.ModelSerializer):
-    """ Comment serializer for GET requests with nested comments"""
+    """ Comment serializer for GET requests with nested comments """
     replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['body', 'author', 'parent_comment', 'post', 'replies']
+        fields = ['body', 'author', 'replies']
 
     @staticmethod
     def get_replies(obj):
         """ List of replies to these comment """
         if obj.is_parent:
-            return CommentChildSerializer(
+            return CommentDetailsSerializer(
                 Comment.objects.find_by_parent_comment(obj),
                 many=True
             ).data
