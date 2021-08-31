@@ -32,6 +32,18 @@ class Post(models.Model):
         verbose_name_plural = 'Posts'
 
 
+class CommentManager(models.Manager):
+    """ Manager for Comment model """
+
+    def get_queryset(self):
+        """ Override get_queryset method from BaseManager """
+        return super().get_queryset()
+
+    def find_by_ids(self, ids):
+        """ Retrieve comments by id """
+        return self.get_queryset().filter(id__in=ids)
+
+
 class Comment(models.Model):
     """ Comment under the post """
 
@@ -55,6 +67,8 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
     is_child = models.BooleanField(default=True, verbose_name='is it child comment?')
 
+    objects = CommentManager()
+
     def __str__(self):
         return f'{self.body}: {self.author}'
 
@@ -62,3 +76,9 @@ class Comment(models.Model):
         verbose_name = 'comment'
         verbose_name_plural = 'Comments'
 
+    @property
+    def get_parent(self):
+        """ Return parent comment or empty string """
+        if not self.parent_comment:
+            return ""
+        return self.parent_comment

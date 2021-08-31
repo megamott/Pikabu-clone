@@ -3,10 +3,12 @@ from ..models import (
     Post,
     Comment
 )
+from ...service.CommentUtils import find_ids_of_comments
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
     """ Serializer for POST, PUT, DELETE requests """
+
     class Meta:
         model = Post
         fields = '__all__'
@@ -28,17 +30,15 @@ class PostListSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_comments(obj):
-        """ List of replies to these comment """
-        return CommentDetailsSerializer(
-            Comment.objects.find_by_post_with_nested_comments(obj),
-            many=True
-        ).data
+        """ Get author username """
+        ids = find_ids_of_comments([], obj.comments.all())
+        return CommentChildSerializer(Comment.objects.find_by_ids(ids), many=True).data
 
 
-class CommentDetailsSerializer(serializers.ModelSerializer):
-    """ Comment serializer for GET requests with nested comments """
+class CommentChildSerializer(serializers.ModelSerializer):
+    """ Comment serializer post GET request """
 
     class Meta:
         model = Comment
-        fields = ['body', 'author', 'replies']
+        fields = ['id', 'body', 'author', 'parent_comment']
 

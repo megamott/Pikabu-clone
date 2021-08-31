@@ -1,8 +1,8 @@
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from .serializers import (
     PostDetailSerializer,
     PostListSerializer,
-    CommentDetailsSerializer,
+    CommentChildSerializer,
 )
 from ..models import (
     Post,
@@ -25,7 +25,6 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CommentDetailView(generics.ListAPIView):
-    serializer_class = CommentDetailsSerializer
+    queryset = Comment.objects.all()
+    serializer_class = CommentChildSerializer
 
-    def get_queryset(self):
-        return Comment.objects.find_parent_comments()
