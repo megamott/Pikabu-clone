@@ -6,5 +6,5 @@ from django.urls import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('pikabu_clone.apps.posts.api.urls'))
+    path('api/v1/posts', include('pikabu_clone.apps.posts.api.urls'))
 ]
