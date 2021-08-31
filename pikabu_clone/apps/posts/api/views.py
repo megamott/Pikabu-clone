@@ -3,7 +3,6 @@ from .serializers import (
     PostDetailSerializer,
     PostListSerializer,
     CommentDetailsSerializer,
-    CommentListSerializer
 )
 from ..models import (
     Post,

@@ -32,6 +32,22 @@ class Post(models.Model):
         return Comment.objects.filter(post=self)
 
 
+class CommentManager(models.Manager):
+    """ Manager for Comment model """
+
+    def get_queryset(self):
+        """ Override get_queryset method from BaseManager """
+        return super().get_queryset()
+
+    def find_by_post(self, post):
+        """ Retrieve comments by post """
+        return self.get_queryset().filter(post=post)
+
+    def find_by_parent_comment(self, parent_comment):
+        """ Get children of comment """
+        return self.get_queryset().filter(parent_comment=parent_comment)
+
+
 class Comment(models.Model):
     """ Comment under the post """
 
@@ -57,6 +73,8 @@ class Comment(models.Model):
         verbose_name='parent comment, to achieve tree comments behavior'
     )
 
+    objects = CommentManager()
+
     def __str__(self):
         return f'{self.body}: {self.post} by {self.author}'
 
@@ -64,14 +82,9 @@ class Comment(models.Model):
         verbose_name = 'comment'
         verbose_name_plural = 'Comments'
 
-    def children(self):
-        """ Get children of comment """
-        return Comment.objects.filter(parent_comment=self)
-
     @property
     def is_parent(self):
         """ Determines if a comment is a parent """
         if self.parent_comment is None:
             return True
         return False
-
