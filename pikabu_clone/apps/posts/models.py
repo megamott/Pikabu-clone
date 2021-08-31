@@ -6,6 +6,18 @@ from django.contrib.contenttypes.fields import GenericRelation
 User = get_user_model()
 
 
+class PostManager(models.Manager):
+    """ Manager for Comment model """
+
+    def get_queryset(self):
+        """ Override get_queryset method from BaseManager """
+        return super().get_queryset()
+
+    def find_by_id(self, pk):
+        """ Retrieve comments by id """
+        return self.get_queryset().filter(pk=pk)
+
+
 class Post(models.Model):
     """ Post in Pikabu-clone app """
 
@@ -23,6 +35,8 @@ class Post(models.Model):
     )
     timestamp = models.DateTimeField(auto_now=True, verbose_name='date of post creation')
     comments = GenericRelation('comment')
+
+    objects = PostManager()
 
     def __str__(self):
         return self.title
