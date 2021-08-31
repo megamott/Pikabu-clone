@@ -20,14 +20,27 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'body', 'author', 'comments')
 
 
-class CommentListSerializer(serializers.ModelSerializer):
+class CommentChildSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['body', 'author']
 
+
+class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
 
 
+class CommentDetailsSerializer(serializers.ModelSerializer):
+    replies = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Comment
+        fields = ['body', 'author', 'parent_comment', 'post', 'replies']
 
-
-
+    @staticmethod
+    def get_replies(obj):
+        if obj.is_parent:
+            return CommentChildSerializer(obj.children(), many=True).data
+        return []

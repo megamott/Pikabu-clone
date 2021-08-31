@@ -27,6 +27,10 @@ class Post(models.Model):
         verbose_name = 'post'
         verbose_name_plural = 'Posts'
 
+    def comments(self):
+        """ Get all comments to these post """
+        return Comment.objects.filter(post=self)
+
 
 class Comment(models.Model):
     """ Comment under the post """
@@ -59,3 +63,15 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'comment'
         verbose_name_plural = 'Comments'
+
+    def children(self):
+        """ Get children of comment """
+        return Comment.objects.filter(parent_comment=self)
+
+    @property
+    def is_parent(self):
+        """ Determines if a comment is a parent """
+        if self.parent_comment is None:
+            return True
+        return False
+
