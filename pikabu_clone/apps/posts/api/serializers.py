@@ -37,18 +37,8 @@ class PostListSerializer(serializers.ModelSerializer):
 
 class CommentDetailsSerializer(serializers.ModelSerializer):
     """ Comment serializer for GET requests with nested comments """
-    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = ['body', 'author', 'replies']
 
-    @staticmethod
-    def get_replies(obj):
-        """ List of replies to these comment """
-        if obj.is_parent:
-            return CommentDetailsSerializer(
-                Comment.objects.find_by_parent_comment(obj),
-                many=True
-            ).data
-        return []

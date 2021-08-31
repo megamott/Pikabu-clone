@@ -21,6 +21,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
+    timestamp = models.DateTimeField(auto_now=True, verbose_name='date of post creation')
     comments = GenericRelation('comment')
 
     def __str__(self):
@@ -49,8 +50,18 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
+    parent_comment = models.ForeignKey(
+        'self',
+        blank=True,
+        null=True,
+        related_name='comment_children',
+        on_delete=models.CASCADE,
+        verbose_name='parent comment which the comment belongs to'
+    )
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
+    timestamp = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
+    is_child = models.BooleanField(default=True, verbose_name='is there a parent comment')
 
     objects = CommentManager()
 
