@@ -40,6 +40,7 @@ class Comment(models.Model):
     )
     post = models.ForeignKey(
         Post,
+        related_name='comments',
         db_index=True,
         on_delete=models.CASCADE,
         verbose_name='which post the comment belongs to'
