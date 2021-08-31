@@ -6,11 +6,11 @@ from .models import (
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('id', 'slug', 'title', 'body', 'author')
+    list_display = ('id', 'slug', 'title', 'body', 'author', 'timestamp')
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'body', 'author', 'content_type')
+    list_display = ('id', 'body', 'author', 'content_type', 'object_id', 'timestamp', 'is_child')
 
 
 admin.site.register(Post, PostAdmin)
