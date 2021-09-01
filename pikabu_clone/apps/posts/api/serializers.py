@@ -5,7 +5,7 @@ from ..models import (
 )
 
 
-class PostUpdateSerializer(serializers.ModelSerializer):
+class PostCreateSerializer(serializers.ModelSerializer):
     """ Serializer for POST, PUT, DELETE requests """
 
     class Meta:
@@ -13,12 +13,28 @@ class PostUpdateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CommentUpdateSerializer(serializers.ModelSerializer):
+class PostSerializerWithoutAuthorField(serializers.ModelSerializer):
+    """ Serializer for PUT requests """
+
+    class Meta:
+        model = Post
+        exclude = ('author',)
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
     """ Serializer for POST requests """
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        exclude = ('author', 'post')
+
+
+class CommentSerializerWithOnlyBodyField(serializers.ModelSerializer):
+    """ Serializer for PUT requests """
+
+    class Meta:
+        model = Post
+        fields = ('body',)
 
 
 class RecursiveSerializer(serializers.Serializer):

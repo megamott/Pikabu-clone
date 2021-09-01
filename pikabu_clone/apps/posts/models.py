@@ -21,6 +21,15 @@ class PostManager(models.Manager):
         """ Get parent comments related to this post """
         return self.comments.filter(parent=None)
 
+    def get_comments_pks(self, pk):
+        """ Get ids of nested comments """
+        return list(
+            map(
+                lambda a: a.pk,
+                list(self.find_by_id(pk=pk).comments.all())
+            )
+        )
+
 
 class Post(models.Model):
     """ Post in Pikabu-clone app """
