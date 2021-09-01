@@ -64,6 +64,6 @@ class PostCommentsSerializer(serializers.ModelSerializer):
         fields = ('comments',)
 
     @staticmethod
-    def get_child_comments(obj):
+    def get_comments(obj):
         """ Get author username """
         return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data

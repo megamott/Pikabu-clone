@@ -31,7 +31,7 @@ class CommentCreateView(generics.CreateAPIView):
 
 
 class CommentListView(generics.ListAPIView):
-    serializer_class = CommentChildSerializer
+    serializer_class = PostCommentsSerializer
 
     def get_queryset(self):
         return Post.objects.find_by_id(pk=self.kwargs['pk'])
