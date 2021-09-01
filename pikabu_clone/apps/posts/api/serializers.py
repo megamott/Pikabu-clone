@@ -3,7 +3,6 @@ from ..models import (
     Post,
     Comment
 )
-from ...service.CommentUtils import find_ids_of_comments
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
@@ -38,16 +37,21 @@ class PostListSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_comments(obj):
         """ Get author username """
-        ids = find_ids_of_comments([], obj.comments.all())
-        return CommentChildSerializer(Comment.objects.find_by_ids(ids), many=True).data
+        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data
 
 
 class CommentChildSerializer(serializers.ModelSerializer):
     """ Comment serializer post GET request """
+    child_comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ('id', 'body', 'author', 'parent_comment')
+        fields = ('id', 'body', 'author', 'parent_comment', 'child_comments')
+
+    @staticmethod
+    def get_child_comments(obj):
+        """ Get author username """
+        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data
 
 
 class PostCommentsSerializer(serializers.ModelSerializer):
@@ -60,7 +64,6 @@ class PostCommentsSerializer(serializers.ModelSerializer):
         fields = ('comments',)
 
     @staticmethod
-    def get_comments(obj):
+    def get_child_comments(obj):
         """ Get author username """
-        ids = find_ids_of_comments([], obj.comments.all())
-        return CommentChildSerializer(Comment.objects.find_by_ids(ids), many=True).data
+        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data

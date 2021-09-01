@@ -3,7 +3,8 @@ from .serializers import (
     PostDetailSerializer,
     PostListSerializer,
     PostCommentsSerializer,
-    CommentDetailSerializer
+    CommentDetailSerializer,
+    CommentChildSerializer
 )
 from ..models import (
     Post,
@@ -30,7 +31,7 @@ class CommentCreateView(generics.CreateAPIView):
 
 
 class CommentListView(generics.ListAPIView):
-    serializer_class = PostCommentsSerializer
+    serializer_class = CommentChildSerializer
 
     def get_queryset(self):
         return Post.objects.find_by_id(pk=self.kwargs['pk'])

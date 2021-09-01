@@ -53,9 +53,14 @@ class CommentManager(models.Manager):
         """ Override get_queryset method from BaseManager """
         return super().get_queryset()
 
-    def find_by_ids(self, ids):
-        """ Retrieve comments by id """
-        return self.get_queryset().filter(id__in=ids)
+    def find_by_instance(self, instance):
+        """ Retrieve comments by instance """
+        content_type = ContentType.objects.get_for_model(instance.__class__)
+        object_id = instance.id
+        return super(CommentManager, self).filter(
+            content_type=content_type,
+            object_id=object_id
+        )
 
 
 class Comment(models.Model):
@@ -76,10 +81,13 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='parent comment which the comment belongs to'
     )
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        verbose_name='type of parent object'
+    )
+    object_id = models.PositiveIntegerField(verbose_name='parent object id')
     timestamp = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
-    is_child = models.BooleanField(default=True, verbose_name='is it child comment?')
 
     objects = CommentManager()
 
@@ -89,10 +97,3 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'comment'
         verbose_name_plural = 'Comments'
-
-    @property
-    def get_parent(self):
-        """ Return parent comment or empty string """
-        if not self.parent_comment:
-            return ""
-        return self.parent_comment
