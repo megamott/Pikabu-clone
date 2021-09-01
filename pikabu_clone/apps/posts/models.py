@@ -1,7 +1,7 @@
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation
+from mptt.models import TreeForeignKey, MPTTModel
+from django.db import models
 
 User = get_user_model()
 
@@ -15,7 +15,11 @@ class PostManager(models.Manager):
 
     def find_by_id(self, pk):
         """ Retrieve comments by id """
-        return self.get_queryset().filter(pk=pk)
+        return self.get_queryset().filter(pk=pk).first()
+
+    def get_comments(self):
+        """ Get parent comments related to this post """
+        return self.comments.filter(parent=None)
 
 
 class Post(models.Model):
@@ -33,8 +37,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
-    timestamp = models.DateTimeField(auto_now=True, verbose_name='date of post creation')
-    comments = GenericRelation('comment')
+    created_date = models.DateTimeField(auto_now=True, verbose_name='date of post creation')
 
     objects = PostManager()
 
@@ -53,17 +56,12 @@ class CommentManager(models.Manager):
         """ Override get_queryset method from BaseManager """
         return super().get_queryset()
 
-    def find_by_instance(self, instance):
-        """ Retrieve comments by instance """
-        content_type = ContentType.objects.get_for_model(instance.__class__)
-        object_id = instance.id
-        return super(CommentManager, self).filter(
-            content_type=content_type,
-            object_id=object_id
-        )
+    def find_by_post(self, post):
+        """ Find comments related to post"""
+        return self.get_queryset().filter(post=post)
 
 
-class Comment(models.Model):
+class Comment(MPTTModel):
     """ Comment under the post """
 
     body = models.TextField(verbose_name='main comment text')
@@ -73,21 +71,21 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
-    parent_comment = models.ForeignKey(
+    post = models.ForeignKey(
+        Post,
+        related_name="comments",
+        on_delete=models.CASCADE,
+        verbose_name="post the comment belongs to",
+    )
+    parent = TreeForeignKey(
         'self',
         blank=True,
         null=True,
         related_name='comment_children',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name='parent comment which the comment belongs to'
     )
-    content_type = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE,
-        verbose_name='type of parent object'
-    )
-    object_id = models.PositiveIntegerField(verbose_name='parent object id')
-    timestamp = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
+    created_date = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
 
     objects = CommentManager()
 

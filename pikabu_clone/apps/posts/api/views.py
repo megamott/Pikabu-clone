@@ -1,10 +1,9 @@
 from rest_framework import generics, viewsets
 from .serializers import (
+    PostUpdateSerializer,
     PostDetailSerializer,
-    PostListSerializer,
-    PostCommentsSerializer,
-    CommentDetailSerializer,
-    CommentChildSerializer
+    CommentSerializer,
+    CommentUpdateSerializer,
 )
 from ..models import (
     Post,
@@ -13,30 +12,36 @@ from ..models import (
 
 
 class PostCreateView(generics.CreateAPIView):
-    serializer_class = PostDetailSerializer
+    serializer_class = PostUpdateSerializer
 
 
 class PostsListView(generics.ListAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostListSerializer
+    serializer_class = PostDetailSerializer
 
 
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostDetailSerializer
+    serializer_class = PostUpdateSerializer
 
 
 class CommentCreateView(generics.CreateAPIView):
-    serializer_class = CommentDetailSerializer
+    serializer_class = CommentUpdateSerializer
+
+
+class PostCommentListView(generics.ListAPIView):
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        post = Post.objects.find_by_id(pk=self.kwargs['pk'])
+        return Comment.objects.find_by_post(post)
 
 
 class CommentListView(generics.ListAPIView):
-    serializer_class = PostCommentsSerializer
-
-    def get_queryset(self):
-        return Post.objects.find_by_id(pk=self.kwargs['pk'])
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
 
 
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
-    serializer_class = CommentDetailSerializer
+    serializer_class = CommentUpdateSerializer

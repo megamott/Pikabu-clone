@@ -5,7 +5,7 @@ from ..models import (
 )
 
 
-class PostDetailSerializer(serializers.ModelSerializer):
+class PostUpdateSerializer(serializers.ModelSerializer):
     """ Serializer for POST, PUT, DELETE requests """
 
     class Meta:
@@ -13,17 +13,51 @@ class PostDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CommentDetailSerializer(serializers.ModelSerializer):
-    """ Serializer for POST, PUT, DELETE requests """
+class CommentUpdateSerializer(serializers.ModelSerializer):
+    """ Serializer for POST requests """
+
     class Meta:
         model = Comment
         fields = '__all__'
 
 
-class PostListSerializer(serializers.ModelSerializer):
+class RecursiveSerializer(serializers.Serializer):
+    """ Output children recursively """
+
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+
+class FilterCommentListSerializer(serializers.ListSerializer):
+    """ Output only parent comments """
+
+    def to_representation(self, data):
+        data = data.filter(parent=None)
+        return super().to_representation(data)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """ Comments belongs to Post serializer """
+
+    comment_children = RecursiveSerializer(many=True)
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        list_serializer_class = FilterCommentListSerializer
+        model = Comment
+        fields = ('id', 'author', 'body', 'post', 'parent', 'created_date', 'comment_children')
+
+    @staticmethod
+    def get_author(obj):
+        """ Get author username """
+        return str(obj.author.username)
+
+
+class PostDetailSerializer(serializers.ModelSerializer):
     """ Serializer for GET requests """
     author = serializers.SerializerMethodField()
-    comments = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True)
 
     class Meta:
         model = Post
@@ -33,37 +67,3 @@ class PostListSerializer(serializers.ModelSerializer):
     def get_author(obj):
         """ Get author username """
         return str(obj.author.username)
-
-    @staticmethod
-    def get_comments(obj):
-        """ Get author username """
-        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data
-
-
-class CommentChildSerializer(serializers.ModelSerializer):
-    """ Comment serializer post GET request """
-    child_comments = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Comment
-        fields = ('id', 'body', 'author', 'parent_comment', 'child_comments')
-
-    @staticmethod
-    def get_child_comments(obj):
-        """ Get author username """
-        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data
-
-
-class PostCommentsSerializer(serializers.ModelSerializer):
-    """ Comments belonging to Post serializer """
-
-    comments = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Post
-        fields = ('comments',)
-
-    @staticmethod
-    def get_comments(obj):
-        """ Get author username """
-        return CommentChildSerializer(Comment.objects.find_by_instance(obj), many=True).data
