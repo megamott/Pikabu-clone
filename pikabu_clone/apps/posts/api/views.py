@@ -14,21 +14,23 @@ from ..models import (
     Post,
     Comment
 )
+from ...core.class_utils import BaseView
 
 
-class PostCreateView(generics.CreateAPIView):
+class PostCreateView(BaseView, generics.CreateAPIView):
     serializer_class = PostSerializerWithoutAuthorField
 
     def perform_create(self, serializer):
+        """ Set author field from query parameters """
         serializer.save(author=self.request.user)
 
 
-class PostsListView(generics.ListAPIView):
+class PostsListView(BaseView, generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostDetailSerializer
 
 
-class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PostDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostCreateSerializer
 
@@ -42,7 +44,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
         return serializer_class
 
 
-class CommentCreateView(generics.CreateAPIView):
+class CommentCreateView(BaseView, generics.CreateAPIView):
     serializer_class = CommentCreateSerializer
 
     def create(self, request, *args, **kwargs):
@@ -58,13 +60,14 @@ class CommentCreateView(generics.CreateAPIView):
         return super(CommentCreateView, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
+        """ Set author and post fields from query parameters """
         serializer.save(
             author=self.request.user,
             post=Post.objects.find_by_id(pk=self.kwargs['pk'])
         )
 
 
-class PostCommentListView(generics.ListAPIView):
+class PostCommentListView(BaseView, generics.ListAPIView):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
@@ -73,12 +76,12 @@ class PostCommentListView(generics.ListAPIView):
         return Comment.objects.find_by_post(post)
 
 
-class CommentListView(generics.ListAPIView):
+class CommentListView(BaseView, generics.ListAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
 
-class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CommentDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CommentCreateSerializer
 
     def get_queryset(self):
