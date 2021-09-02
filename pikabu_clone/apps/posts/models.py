@@ -73,7 +73,7 @@ class CommentManager(models.Manager):
 class Comment(MPTTModel):
     """ Comment under the post """
 
-    body = models.TextField(verbose_name='main comment text')
+    text = models.TextField(verbose_name='main comment text')
     author = models.ForeignKey(
         User,
         db_index=True,
@@ -95,11 +95,12 @@ class Comment(MPTTModel):
         verbose_name='parent comment which the comment belongs to'
     )
     created_date = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
+    deleted = models.BooleanField(default=False, verbose_name='has this comment been deleted?')
 
     objects = CommentManager()
 
     def __str__(self):
-        return f'{self.body}: {self.author}'
+        return f'{self.text}: {self.author}'
 
     class Meta:
         verbose_name = 'comment'

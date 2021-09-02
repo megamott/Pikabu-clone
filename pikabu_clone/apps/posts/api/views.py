@@ -8,7 +8,7 @@ from .serializers import (
     PostSerializerWithoutAuthorField,
     CommentSerializer,
     CommentCreateSerializer,
-    CommentSerializerWithOnlyBodyField
+    CommentSerializerWithOnlyTextField
 )
 from ..models import (
     Post,
@@ -79,19 +79,23 @@ class CommentListView(generics.ListAPIView):
 
 
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Comment.objects.all()
     serializer_class = CommentCreateSerializer
 
     def get_queryset(self):
         """ Get comments belongs to post with pk1 """
         post = Post.objects.find_by_id(pk=self.kwargs['pk1'])
-        return Comment.objects.find_by_post(post)
+        return Comment.objects.find_by_post(post).filter(deleted=False)
 
     def get_serializer_class(self):
         """ Forbid updating author and parent fields """
         serializer_class = self.serializer_class
 
         if self.request.method == 'PUT':
-            serializer_class = CommentSerializerWithOnlyBodyField
+            serializer_class = CommentSerializerWithOnlyTextField
 
         return serializer_class
+
+    def perform_destroy(self, instance):
+        """ Doesn't remove comment from database """
+        instance.deleted = True
+        instance.save()

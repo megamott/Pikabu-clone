@@ -29,12 +29,12 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         exclude = ('author', 'post')
 
 
-class CommentSerializerWithOnlyBodyField(serializers.ModelSerializer):
+class CommentSerializerWithOnlyTextField(serializers.ModelSerializer):
     """ Serializer for PUT requests """
 
     class Meta:
-        model = Post
-        fields = ('body',)
+        model = Comment
+        fields = ('text',)
 
 
 class RecursiveSerializer(serializers.Serializer):
@@ -58,16 +58,32 @@ class CommentSerializer(serializers.ModelSerializer):
 
     comment_children = RecursiveSerializer(many=True)
     author = serializers.SerializerMethodField()
+    text = serializers.SerializerMethodField()
 
     class Meta:
         list_serializer_class = FilterCommentListSerializer
         model = Comment
-        fields = ('id', 'author', 'body', 'post', 'parent', 'created_date', 'comment_children')
+        fields = (
+            'id',
+            'author',
+            'text',
+            'post',
+            'parent',
+            'created_date',
+            'deleted',
+            'comment_children'
+        )
 
     @staticmethod
     def get_author(obj):
         """ Get author username """
         return str(obj.author.username)
+
+    @staticmethod
+    def get_text(obj):
+        if obj.deleted:
+            return None
+        return obj.text
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
