@@ -1,6 +1,8 @@
-from rest_framework import generics, status
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED
+from pikabu_clone.apps.authentication.permissions import IsAuthorOrReadOnly
 
 from .serializers import (
     PostCreateSerializer,
@@ -19,6 +21,7 @@ from ...core.class_utils import BaseView
 
 class PostCreateView(BaseView, generics.CreateAPIView):
     serializer_class = PostSerializerWithoutAuthorField
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def perform_create(self, serializer):
         """ Set author field from query parameters """
@@ -28,11 +31,13 @@ class PostCreateView(BaseView, generics.CreateAPIView):
 class PostsListView(BaseView, generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostDetailSerializer
+    permission_classes = (IsAuthenticated,)
 
 
 class PostDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostCreateSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_serializer_class(self):
         """ Update only body field """
@@ -46,6 +51,7 @@ class PostDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
 
 class CommentCreateView(BaseView, generics.CreateAPIView):
     serializer_class = CommentCreateSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def create(self, request, *args, **kwargs):
         post_comments_ids = Post.objects.get_comments_pks(pk=self.kwargs['pk'])
@@ -53,7 +59,7 @@ class CommentCreateView(BaseView, generics.CreateAPIView):
 
         if int(parent_id) not in post_comments_ids:
             return Response(
-                status=HTTP_400_BAD_REQUEST,
+                status=HTTP_405_METHOD_NOT_ALLOWED,
                 data={'message': 'this parent comment is not a comment on this post'}
             )
 
@@ -69,6 +75,7 @@ class CommentCreateView(BaseView, generics.CreateAPIView):
 
 class PostCommentListView(BaseView, generics.ListAPIView):
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         """ Get comments belongs to post with pk1 """
@@ -76,13 +83,9 @@ class PostCommentListView(BaseView, generics.ListAPIView):
         return Comment.objects.find_by_post(post)
 
 
-class CommentListView(BaseView, generics.ListAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-
-
 class CommentDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CommentCreateSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
         """ Get comments belongs to post with pk1 """
