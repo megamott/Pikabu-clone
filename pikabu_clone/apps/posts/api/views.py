@@ -40,6 +40,10 @@ class PostDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostCreateSerializer
     permission_classes = (IsAuthorOrReadOnly,)
 
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
+
     def get_serializer_class(self):
         """ Update only body field """
         serializer_class = self.serializer_class

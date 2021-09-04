@@ -59,9 +59,15 @@ class UserTests(APITestCase):
             'title': 'some_title'
         }
 
+        # Data for Post partial update
+        self.post_partial_update_data = {
+            'body': 'some_up_body',
+            'title': 'some_up_title'
+        }
+
         # Data for Post update
         self.post_update_data = {
-            'slug': 'some_up_slug',
+            'slug': 'some_slug',
             'body': 'some_up_body',
             'title': 'some_up_title'
         }
@@ -129,16 +135,24 @@ class UserTests(APITestCase):
         """ Test update fields in post from not author user """
         url = reverse('post:post-detail', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user2.key)
-        response = self.client.put(url, data=self.post_update_data, format='multipart')
+        response = self.client.put(url, data=self.post_partial_update_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_partial_update_post(self):
+        """ Test update two field in post """
+        url = reverse('post:post-detail', kwargs={'pk': self.post.id})
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        response = self.client.put(url, data=self.post_partial_update_data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get('body'), self.post_partial_update_data['body'])
+
     def test_update_post(self):
-        """ Test update fields in post """
+        """ Test update all fields in post """
         url = reverse('post:post-detail', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         response = self.client.put(url, data=self.post_update_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json().get('body'), self.post_update_data['body'])
+        self.assertEqual(response.json().get('body'), self.post_partial_update_data['body'])
 
     def test_fail_comment_detail(self):
         """ Test for retrieving comment belonging to the other post """
