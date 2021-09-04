@@ -9,6 +9,9 @@ class BaseView(View):
         """ Rewrite view's dispatch method"""
         try:
             response = super().dispatch(request, *args, **kwargs)
+        except ValueError:
+            # Error: user must be a User, when user no authorized
+            return self._response({'message': 'user no authorized'}, status=401)
         except Exception as e:
             return self._response({'message': e.message}, status=400)
 

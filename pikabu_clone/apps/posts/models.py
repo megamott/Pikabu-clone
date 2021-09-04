@@ -40,7 +40,7 @@ class Post(models.Model):
         max_length=50,
         verbose_name='title describing the essence of the post'
     )
-    author = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         db_index=True,
         on_delete=models.CASCADE,
@@ -74,7 +74,7 @@ class Comment(MPTTModel):
     """ Comment under the post """
 
     text = models.TextField(verbose_name='main comment text')
-    author = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         db_index=True,
         on_delete=models.CASCADE,
@@ -100,7 +100,7 @@ class Comment(MPTTModel):
     objects = CommentManager()
 
     def __str__(self):
-        return f'{self.text}: {self.author}'
+        return f'{self.text}: {self.user}'
 
     class Meta:
         verbose_name = 'comment'

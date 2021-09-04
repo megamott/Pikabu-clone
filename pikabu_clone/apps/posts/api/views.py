@@ -1,3 +1,4 @@
+from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,7 +8,7 @@ from pikabu_clone.apps.authentication.permissions import IsAuthorOrReadOnly
 from .serializers import (
     PostCreateSerializer,
     PostDetailSerializer,
-    PostSerializerWithoutAuthorField,
+    PostSerializerWithoutUserField,
     CommentSerializer,
     CommentCreateSerializer,
     CommentSerializerWithOnlyTextField
@@ -20,12 +21,12 @@ from ...core.class_utils import BaseView
 
 
 class PostCreateView(BaseView, generics.CreateAPIView):
-    serializer_class = PostSerializerWithoutAuthorField
+    serializer_class = PostSerializerWithoutUserField
     permission_classes = (IsAuthorOrReadOnly,)
 
     def perform_create(self, serializer):
-        """ Set author field from query parameters """
-        serializer.save(author=self.request.user)
+        """ Set user field from query parameters """
+        serializer.save(user=self.request.user)
 
 
 class PostsListView(BaseView, generics.ListAPIView):
@@ -44,7 +45,7 @@ class PostDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
         serializer_class = self.serializer_class
 
         if self.request.method == 'PUT':
-            serializer_class = PostSerializerWithoutAuthorField
+            serializer_class = PostSerializerWithoutUserField
 
         return serializer_class
 
@@ -55,20 +56,23 @@ class CommentCreateView(BaseView, generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         post_comments_ids = Post.objects.get_comments_pks(pk=self.kwargs['pk'])
-        parent_id = request.data['parent']
 
-        if int(parent_id) not in post_comments_ids:
-            return Response(
-                status=HTTP_405_METHOD_NOT_ALLOWED,
-                data={'message': 'this parent comment is not a comment on this post'}
-            )
+        try:
+            parent_id = request.data['parent']
+            if int(parent_id) not in post_comments_ids:
+                return Response(
+                    status=HTTP_405_METHOD_NOT_ALLOWED,
+                    data={'message': 'this parent comment is not a comment on this post'}
+                )
+        except MultiValueDictKeyError:  # when we create comment without parent
+            pass
 
         return super(CommentCreateView, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        """ Set author and post fields from query parameters """
+        """ Set user and post fields from query parameters """
         serializer.save(
-            author=self.request.user,
+            user=self.request.user,
             post=Post.objects.find_by_id(pk=self.kwargs['pk'])
         )
 
@@ -93,7 +97,7 @@ class CommentDetailView(BaseView, generics.RetrieveUpdateDestroyAPIView):
         return Comment.objects.find_by_post(post).filter(deleted=False)
 
     def get_serializer_class(self):
-        """ Forbid updating author and parent fields """
+        """ Forbid updating user and parent fields """
         serializer_class = self.serializer_class
 
         if self.request.method == 'PUT':

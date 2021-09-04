@@ -13,12 +13,12 @@ class PostCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PostSerializerWithoutAuthorField(serializers.ModelSerializer):
+class PostSerializerWithoutUserField(serializers.ModelSerializer):
     """ Serializer for PUT requests """
 
     class Meta:
         model = Post
-        exclude = ('author',)
+        exclude = ('user',)
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
@@ -26,7 +26,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        exclude = ('author', 'post')
+        exclude = ('user', 'post')
 
 
 class CommentSerializerWithOnlyTextField(serializers.ModelSerializer):
@@ -57,7 +57,7 @@ class CommentSerializer(serializers.ModelSerializer):
     """ Comments belongs to Post serializer """
 
     comment_children = RecursiveSerializer(many=True)
-    author = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
     text = serializers.SerializerMethodField()
 
     class Meta:
@@ -65,7 +65,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id',
-            'author',
+            'user',
             'text',
             'post',
             'parent',
@@ -75,9 +75,9 @@ class CommentSerializer(serializers.ModelSerializer):
         )
 
     @staticmethod
-    def get_author(obj):
-        """ Get author username """
-        return str(obj.author.username)
+    def get_user(obj):
+        """ Get user username """
+        return str(obj.user.username)
 
     @staticmethod
     def get_text(obj):
@@ -88,14 +88,14 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostDetailSerializer(serializers.ModelSerializer):
     """ Serializer for GET requests """
-    author = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
     comments = CommentSerializer(many=True)
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'body', 'author', 'comments')
+        fields = ('id', 'title', 'body', 'user', 'comments')
 
     @staticmethod
-    def get_author(obj):
-        """ Get author username """
-        return str(obj.author.username)
+    def get_user(obj):
+        """ Get user username """
+        return str(obj.user.username)
