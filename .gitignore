@@ -41,6 +41,7 @@ package-lock.json
 /output/
 /cache/
 boilerplate.zip
+.env.dev
 
 # Spritesmith
 spritesmith-generated/
