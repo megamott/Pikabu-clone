@@ -30,9 +30,23 @@ class UserTests(APITestCase):
         self.token_user2 = Token.objects.create(user=user2)
 
         # Create Posts and Comments models
-        self.post = Post.objects.create(slug='slug', body='body', title='title', user=user)
-        self.post2 = Post.objects.create(slug='slug1', body='body1', title='title1', user=user)
-        self.comment = Comment.objects.create(text='text', user=user, post=self.post)
+        self.post = Post.objects.create(
+            slug='slug',
+            body='body',
+            title='title',
+            user=user
+        )
+        self.post2 = Post.objects.create(
+            slug='slug1',
+            body='body1',
+            title='title1',
+            user=user
+        )
+        self.comment = Comment.objects.create(
+            text='text',
+            user=user,
+            post=self.post
+        )
         Comment.objects.create(
             text='text',
             user=user,
@@ -121,7 +135,11 @@ class UserTests(APITestCase):
     def test_create_invalid_post(self):
         """ Test for create post without authentication """
         url = reverse('post:create-post')
-        response = self.client.post(url, data=self.post_data, format='multipart')
+        response = self.client.post(
+            url,
+            data=self.post_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_post(self):
@@ -135,28 +153,49 @@ class UserTests(APITestCase):
         """ Test update fields in post from not author user """
         url = reverse('post:post-detail', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user2.key)
-        response = self.client.put(url, data=self.post_partial_update_data, format='multipart')
+        response = self.client.put(
+            url,
+            data=self.post_partial_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_partial_update_post(self):
         """ Test update two field in post """
         url = reverse('post:post-detail', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        response = self.client.put(url, data=self.post_partial_update_data, format='multipart')
+        response = self.client.put(
+            url,
+            data=self.post_partial_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json().get('body'), self.post_partial_update_data['body'])
+        self.assertEqual(
+            response.json().get('body'),
+            self.post_partial_update_data['body']
+        )
 
     def test_update_post(self):
         """ Test update all fields in post """
         url = reverse('post:post-detail', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        response = self.client.put(url, data=self.post_update_data, format='multipart')
+        response = self.client.put(
+            url,
+            data=self.post_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json().get('body'), self.post_partial_update_data['body'])
+        self.assertEqual(
+            response.json().get('body'),
+            self.post_partial_update_data['body']
+        )
 
     def test_fail_comment_detail(self):
         """ Test for retrieving comment belonging to the other post """
-        url = reverse('post:comment-detail', kwargs={'pk': self.post.id, 'pk1': self.comment2.id})
+        url = reverse(
+            'post:comment-detail',
+            kwargs={'pk': self.post.id, 'pk1': self.comment2.id}
+        )
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -178,35 +217,67 @@ class UserTests(APITestCase):
         """ Test for create comment with parent """
         url = reverse('post:create-comment', kwargs={'pk': self.post.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        response = self.client.post(url, data=self.comment_with_parent_data, format='multipart')
+        response = self.client.post(
+            url,
+            data=self.comment_with_parent_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_fail_create_comment_from_other_post(self):
         """ Test for create comment with parent """
         url = reverse('post:create-comment', kwargs={'pk': self.post2.id})
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        response = self.client.post(url, data=self.comment_with_parent_data, format='multipart')
+        response = self.client.post(
+            url,
+            data=self.comment_with_parent_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_invalid_update_comment(self):
         """ Test update fields in comment from not author user """
-        url = reverse('post:comment-detail', kwargs={'pk1': self.post.id, 'pk': self.comment.id})
+        url = reverse(
+            'post:comment-detail',
+            kwargs={'pk1': self.post.id, 'pk': self.comment.id}
+        )
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_user2.key)
-        response = self.client.put(url, data=self.comment_update_data, format='multipart')
+        response = self.client.put(
+            url,
+            data=self.comment_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_comment(self):
         """ Test update 'text' field in comment """
-        url = reverse('post:comment-detail', kwargs={'pk1': self.post.id, 'pk': self.comment.id})
+        url = reverse(
+            'post:comment-detail',
+            kwargs={'pk1': self.post.id, 'pk': self.comment.id}
+        )
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        response = self.client.put(url, data=self.comment_update_data, format='multipart')
+        response = self.client.put(
+            url,
+            data=self.comment_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json().get('text'), self.comment_update_data['text'])
+        self.assertEqual(
+            response.json().get('text'),
+            self.comment_update_data['text']
+        )
 
     def test_update_invalid_comment(self):
         """ Test for update comment without authentication """
-        url = reverse('post:comment-detail', kwargs={'pk1': self.post.id, 'pk': self.comment.id})
-        response = self.client.put(url, data=self.comment_update_data, format='multipart')
+        url = reverse(
+            'post:comment-detail',
+            kwargs={'pk1': self.post.id, 'pk': self.comment.id}
+        )
+        response = self.client.put(
+            url,
+            data=self.comment_update_data,
+            format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_check_deleted_comment(self):

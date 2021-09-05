@@ -66,7 +66,9 @@ class CommentCreateView(BaseView, generics.CreateAPIView):
             if int(parent_id) not in post_comments_ids:
                 return Response(
                     status=HTTP_405_METHOD_NOT_ALLOWED,
-                    data={'message': 'this parent comment is not a comment on this post'}
+                    data={
+                        'message': 'this parent comment is not a comment on this post'
+                    }
                 )
         except MultiValueDictKeyError:  # when we create comment without parent
             pass

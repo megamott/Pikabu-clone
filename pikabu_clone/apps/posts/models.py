@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from mptt.models import TreeForeignKey, MPTTModel
 from django.db import models
 
@@ -46,7 +45,10 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         verbose_name='which user the post belongs to'
     )
-    created_date = models.DateTimeField(auto_now=True, verbose_name='date of post creation')
+    created_date = models.DateTimeField(
+        auto_now=True,
+        verbose_name='date of post creation'
+    )
 
     objects = PostManager()
 
@@ -94,8 +96,14 @@ class Comment(MPTTModel):
         on_delete=models.SET_NULL,
         verbose_name='parent comment which the comment belongs to'
     )
-    created_date = models.DateTimeField(auto_now=True, verbose_name='date of comment creation')
-    deleted = models.BooleanField(default=False, verbose_name='has this comment been deleted?')
+    created_date = models.DateTimeField(
+        auto_now=True,
+        verbose_name='date of comment creation'
+    )
+    deleted = models.BooleanField(
+        default=False,
+        verbose_name='has this comment been deleted?'
+    )
 
     objects = CommentManager()
 
